@@ -80,7 +80,10 @@ Cài Redis:
 ```bash
 sudo apt install redis
 ```
-
+✅ 5. Chạy Redis bằng Docker (nếu không muốn cài local)
+```
+docker run -d -p 6379:6379 --name redis-server redis 
+``` 
 Chạy worker Celery:
 ```bash
 celery -A myproject worker --loglevel=info
