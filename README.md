@@ -25,6 +25,8 @@ Hệ thống web và API REST giúp người dùng tải lên các file âm than
 - JWT (SimpleJWT)
 
 ## 🧱 Cấu trúc dự án
+![django-vosk-AutoTranscriber diagram](https://github.com/user-attachments/assets/10bf6b18-679a-4b88-949f-1b428bebcce2)
+
 
 ```
 ├── vosk_utils.py        # Xử lý nhận dạng giọng nói
