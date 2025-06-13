@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/1e72dccd-4a01-4b9e-abc9-2d6475144990)
+
 # 🎙️ Audio Transcription Platform (VOSK + Django)
 
 Hệ thống web và API REST giúp người dùng tải lên các file âm thanh, tự động chuyển đổi thành văn bản tiếng Việt, cung cấp giao diện web, API bảo mật, và cập nhật realtime qua WebSocket.
