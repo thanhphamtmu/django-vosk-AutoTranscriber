@@ -1,5 +1,4 @@
 from celery import shared_task
-from .models import AudioFile
 from services.audio_processor import AudioProcessorService
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -21,6 +20,9 @@ def push_status_update(instance):
 
 @shared_task
 def process_audio_async(audiofile_id):
+    from django.apps import apps
+    AudioFile = apps.get_model('speech', 'AudioFile')  # Trì hoãn tại đây
+
     obj = AudioFile.objects.get(pk=audiofile_id)
     try:
         path = obj.audio.path
