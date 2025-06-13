@@ -1,50 +1,52 @@
 ![image](https://github.com/user-attachments/assets/3022e9c6-fedf-46a7-854c-43c7f05fbf08)
 # 🎙️ Audio Transcription Platform (VOSK + Django)
 
-Hệ thống web và API REST giúp người dùng tải lên file âm thanh, tự động chuyển đổi thành văn bản (tiếng Việt hoặc tiếng Anh), hỗ trợ realtime qua WebSocket, tích hợp Celery để xử lý nền.
+Nền tảng web và REST API để tải lên file âm thanh, tự động chuyển đổi giọng nói sang văn bản (tiếng Việt hoặc tiếng Anh), hỗ trợ realtime qua WebSocket, nhận diện ngôn ngữ tự động, xử lý nền bằng Celery.
 
 ## 🚀 Tính năng
 
-- ✅ Tải lên file âm thanh `.wav`, `.mp3`, `.m4a`, v.v.
-- ✅ Tự động chuyển giọng nói thành văn bản với [VOSK](https://alphacephei.com/vosk/)
-- ✅ Nhận diện ngôn ngữ (tự động hoặc chọn trước)
-- ✅ Trích xuất thời gian và phân đoạn hội thoại
-- ✅ Hiển thị trạng thái xử lý (`pending`, `done`, `error`)
-- ✅ Giao diện upload realtime (FilePond)
-- ✅ Danh sách, tìm kiếm, xuất `.txt`, `.pdf`
-- ✅ WebSocket thông báo realtime
+- ✅ Tải lên file `.wav`, `.mp3`, `.m4a`, v.v.
+- ✅ Nhận diện giọng nói với [VOSK](https://alphacephei.com/vosk/)
+- ✅ Tự động nhận diện ngôn ngữ (Việt/Anh)
+- ✅ Trích xuất đoạn hội thoại với timestamp
+- ✅ Trạng thái xử lý: `pending`, `done`, `error`
+- ✅ Giao diện upload realtime (FilePond + WebSocket)
+- ✅ Tìm kiếm, lọc danh sách audio
+- ✅ Xuất kết quả `.txt` / `.pdf`
 - ✅ REST API sử dụng JWT
+- ✅ Xử lý nền với Celery + Redis
 
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Công nghệ
 
 - Python 3.10+
 - Django 4.x
 - Django REST Framework
 - Django Channels (WebSocket)
-- Celery + Redis (xử lý nền)
-- Vosk Speech Recognition (Việt/Anh)
+- Celery + Redis
+- Vosk Speech Recognition
 - FFMPEG (chuyển đổi âm thanh)
-- ReportLab (xuất PDF)
+- langdetect (phát hiện ngôn ngữ)
+- ReportLab (PDF export)
 - JWT (SimpleJWT)
 
 ## 🧱 Cấu trúc dự án
 
 ```
-├── services/
-│   └── audio_processor.py  # Xử lý audio, đa ngôn ngữ
+├── services/audio_processor.py     # Xử lý audio, phát hiện ngôn ngữ
 ├── speech/
-│   ├── models.py           # Model AudioFile
-│   ├── views.py            # Giao diện & API
-│   ├── tasks.py            # Celery task xử lý audio
-│   ├── serializers.py      # DRF serializers
-│   ├── consumers.py        # WebSocket consumer
-│   ├── forms.py            # Form upload
-│   ├── templates/          # HTML giao diện
+│   ├── models.py                   # Model AudioFile (audio, language, status, transcript,...)
+│   ├── views.py                    # Giao diện + REST API
+│   ├── forms.py                    # Form upload
+│   ├── templates/                  # HTML giao diện (upload, list)
+│   ├── tasks.py                    # Celery background task
+│   ├── consumers.py                # WebSocket consumer
+│   ├── serializers.py              # DRF serializers
+│   ├── routing.py                  # WebSocket routing
 ```
 
 ## 🔧 Cài đặt
 
-### 1. Môi trường
+### 1. Tạo môi trường ảo & cài thư viện
 
 ```bash
 python -m venv venv
@@ -54,15 +56,16 @@ pip install -r requirements.txt
 
 ### 2. Tải mô hình VOSK
 
-- Vietnamese: `vosk-model-small-vn-0.4`
-- English: `vosk-model-small-en-us-0.15`
+- Tiếng Việt: `vosk-model-small-vn-0.4`
+- Tiếng Anh: `vosk-model-small-en-us-0.15`
 
-Tải từ: [https://alphacephei.com/vosk/models](https://alphacephei.com/vosk/models)
+Nguồn: [https://alphacephei.com/vosk/models](https://alphacephei.com/vosk/models)
 
-Giải nén vào thư mục:
+Giải nén vào:
+
 ```
-/speech/vosk-model-small-vn-0.4
-/speech/vosk-model-small-en-us-0.15
+speech/vosk-model-small-vn-0.4/
+speech/vosk-model-small-en-us-0.15/
 ```
 
 ### 3. Cài FFMPEG
@@ -76,42 +79,39 @@ macOS/Windows: [https://ffmpeg.org/download.html](https://ffmpeg.org/download.ht
 
 ### 4. Redis + Celery
 
-Cài Redis:
+Chạy Redis bằng Docker:
 ```bash
-sudo apt install redis
+docker run -d -p 6379:6379 --name redis-server redis
 ```
-✅ 5. Chạy Redis bằng Docker (nếu không muốn cài local)
-```
-docker run -d -p 6379:6379 --name redis-server redis 
-``` 
-Chạy worker Celery:
+
+Khởi chạy Celery worker:
 ```bash
 celery -A myproject worker --loglevel=info
 ```
 
-### 5. Khởi chạy server
+### 5. Migrate và chạy server
 
 ```bash
 python manage.py migrate
 python manage.py runserver
 ```
 
-## 🔐 API REST
+## 🔐 API
 
-- `POST /api/audio/`: Upload file (yêu cầu JWT)
-- `GET /api/audio/`: Danh sách audio (JWT)
+- `POST /api/audio/`: Tải file (yêu cầu JWT)
+- `GET /api/audio/`: Danh sách file
 
 ## 🌐 Giao diện Web
 
-- `/upload/`: Tải file lên realtime
-- `/list/`: Danh sách, tìm kiếm, theo dõi trạng thái
-- `/export/txt/<id>/`: Xuất `.txt`
-- `/export/pdf/<id>/`: Xuất `.pdf`
+- `/upload/`: Giao diện tải file realtime
+- `/list/`: Danh sách file, tìm kiếm, xuất kết quả
+- `/export/txt/<id>/`: Tải kết quả `.txt`
+- `/export/pdf/<id>/`: Tải kết quả `.pdf`
 
 ## 📡 WebSocket
 
-- `ws://<host>/ws/audio/`: Cập nhật realtime transcript & trạng thái
+- `ws://<host>/ws/audio/`: Nhận thông báo trạng thái và kết quả realtime
 
 ## 📄 License
 
-MIT License
+MIT License.
