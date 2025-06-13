@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Danh sách Audio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-10">
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md">
+    <h2 class="text-2xl font-bold mb-4">Danh sách file đã xử lý</h2>
+
+    <form method="get" class="mb-4 flex gap-2">
+      <input type="text" name="q" value="{{ query }}" placeholder="Tìm kiếm..."
+             class="flex-1 border border-gray-300 rounded p-2">
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Tìm</button>
+    </form>
+
+    <ul class="space-y-4 text-sm">
+      {% for f in page_obj %}
+        <li class="border-b pb-2">
+          <strong>{{ f.audio.name }}</strong><br>
+          <span class="text-gray-500">Transcript:</span> {{ f.transcript|truncatechars:200 }}<br>
+          <a class="text-blue-600 underline" href="{% url 'export_txt' f.id %}">TXT</a> |
+          <a class="text-green-600 underline" href="{% url 'export_pdf' f.id %}">PDF</a>
+        </li>
+      {% empty %}
+        <li>Không có kết quả.</li>
+      {% endfor %}
+    </ul>
+
+    <div class="mt-6 text-center">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}"
+           class="px-4 py-2 bg-gray-200 rounded">Trang trước</a>
+      {% endif %}
+
+      <span class="px-4">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ query }}"
+           class="px-4 py-2 bg-gray-200 rounded">Trang sau</a>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
