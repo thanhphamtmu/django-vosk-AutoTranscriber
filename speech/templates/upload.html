@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload File</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet" />
+  <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+</head>
+<body class="bg-gray-100 p-10">
+  <div class="max-w-2xl mx-auto bg-white shadow-md rounded-xl p-6">
+    <h2 class="text-xl font-semibold mb-4">Tải lên âm thanh (FilePond Realtime)</h2>
+    <input type="file" id="audioInput" name="audio" />
+    <div id="resultMsg" class="mt-4 text-sm text-gray-600"></div>
+    <ul id="realtimeList" class="mt-6 space-y-2 text-sm text-gray-800"></ul>
+  </div>
+
+  <script>
+    const pond = FilePond.create(document.getElementById('audioInput'));
+    pond.setOptions({
+      server: {
+        process: {
+          url: '/api/audio/',
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+          },
+          onload: () => {
+            document.getElementById('resultMsg').textContent = '✅ Tải lên thành công!';
+          },
+          onerror: err => {
+            document.getElementById('resultMsg').textContent = '❌ Lỗi: ' + err;
+          }
+        }
+      }
+    });
+
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/audio/');
+    socket.onmessage = function(e) {
+      const data = JSON.parse(e.data);
+      const ul = document.getElementById('realtimeList');
+      const li = document.createElement('li');
+      li.textContent = `${data.filename.split('/').pop()} - ${data.transcript}...`;
+      ul.prepend(li);
+    };
+  </script>
+</body>
+</html>
