@@ -15,18 +15,35 @@
       <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Tìm</button>
     </form>
 
-    <ul class="space-y-4 text-sm">
-      {% for f in page_obj %}
-        <li class="border-b pb-2">
-          <strong>{{ f.audio.name }}</strong><br>
-          <span class="text-gray-500">Transcript:</span> {{ f.transcript|truncatechars:200 }}<br>
-          <a class="text-blue-600 underline" href="{% url 'export_txt' f.id %}">TXT</a> |
-          <a class="text-green-600 underline" href="{% url 'export_pdf' f.id %}">PDF</a>
-        </li>
-      {% empty %}
-        <li>Không có kết quả.</li>
-      {% endfor %}
-    </ul>
+    <ul class="space-y-4 text-sm" id="audioList">
+  {% for f in page_obj %}
+    <li class="border-b pb-2" id="audio-{{ f.id }}">
+      <strong>{{ f.audio.name }}</strong><br>
+      <span class="text-gray-500">Ngôn ngữ:</span> {{ f.language }}<br>
+      <span class="text-gray-500">Trạng thái:</span>
+      <span class="status">{{ f.status }}</span><br>
+      <span class="text-gray-500">Transcript:</span>
+      <span class="transcript">{{ f.transcript|truncatechars:200 }}</span><br>
+      <a class="text-blue-600 underline" href="{% url 'export_txt' f.id %}">TXT</a> |
+      <a class="text-green-600 underline" href="{% url 'export_pdf' f.id %}">PDF</a>
+    </li>
+  {% empty %}
+    <li>Không có kết quả.</li>
+  {% endfor %}
+</ul>
+
+<script>
+  const socket = new WebSocket('ws://' + window.location.host + '/ws/audio/');
+  socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    const li = document.getElementById('audio-' + data.id);
+    if (li) {
+      li.querySelector('.status').textContent = data.status;
+      li.querySelector('.transcript').textContent = data.transcript + '...';
+    }
+  };
+</script>
+
 
     <div class="mt-6 text-center">
       {% if page_obj.has_previous %}
