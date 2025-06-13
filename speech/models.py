@@ -24,7 +24,7 @@ def upload_to_with_timestamp(instance, filename):
 
 
 class AudioFile(models.Model):
-audio = models.FileField(upload_to=upload_to_with_timestamp, max_length=255, blank=True, null=True)
+    audio = models.FileField(upload_to=upload_to_with_timestamp, max_length=255, blank=True, null=True)
     language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default="vi")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
     transcript = models.TextField(blank=True, editable=False)
