@@ -44,7 +44,7 @@ Nền tảng web và REST API để tải lên file âm thanh, tự động chuy
 │   ├── routing.py                  # WebSocket routing
 ```
 
-## 🔧 Cài đặt
+## 🔧 Cài đặt thủ công
 
 ### 1. Tạo môi trường ảo & cài thư viện
 
@@ -77,15 +77,13 @@ sudo apt update && sudo apt install ffmpeg
 
 macOS/Windows: [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
 
-### 4. Redis + Celery
+### 4. Redis + Celery (local)
 
-Chạy Redis bằng Docker:
 ```bash
+# Redis server
 docker run -d -p 6379:6379 --name redis-server redis
-```
 
-Khởi chạy Celery worker:
-```bash
+# Celery worker
 celery -A myproject worker --loglevel=info
 ```
 
@@ -94,6 +92,52 @@ celery -A myproject worker --loglevel=info
 ```bash
 python manage.py migrate
 python manage.py runserver
+```
+
+## 🐳 Sử dụng Docker
+
+### 1. Build Docker image
+
+```bash
+docker build -t vosk-django-app .
+```
+
+### 2. Chạy đơn lẻ (không dùng docker-compose)
+
+```bash
+docker run -it --rm \
+  -p 8000:8000 \
+  -v $(pwd):/code \
+  -e CELERY_BROKER_URL=redis://host.docker.internal:6379/0 \
+  vosk-django-app
+```
+
+> **Lưu ý**: Redis phải đang chạy ở máy chủ (localhost). Nếu cần Redis trong container, xem docker-compose bên dưới.
+
+### 3. Sử dụng docker-compose
+
+Khởi chạy tất cả service (web, celery, redis):
+
+```bash
+docker-compose up --build
+```
+
+Mặc định sẽ chạy:
+- Web: http://localhost:8000/
+- Redis: cổng 6379
+- Celery: worker xử lý nền
+
+### 4. Kiểm tra logs
+
+```bash
+docker-compose logs -f web
+docker-compose logs -f celery
+```
+
+### 5. Dừng tất cả
+
+```bash
+docker-compose down
 ```
 
 ## 🔐 API
